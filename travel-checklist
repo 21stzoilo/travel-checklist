@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>El Nihuil — Checklist</title>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #ede8dc;
+    --border: #c8b99a;
+    --text: #2a1f0e;
+    --muted: #8a7560;
+    --accent: #5c3d1e;
+    --check: #3a6b35;
+    --done-text: #a89880;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  header {
+    background: var(--accent);
+    color: #f5f0e8;
+    padding: 24px 20px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid #3a2810;
+  }
+
+  header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  header p {
+    font-size: 0.75rem;
+    opacity: 0.65;
+    margin-top: 3px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .progress-bar {
+    margin-top: 12px;
+    height: 3px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #c8a96e;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-label {
+    font-size: 0.7rem;
+    opacity: 0.55;
+    margin-top: 5px;
+    letter-spacing: 0.05em;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 108px;
+    z-index: 9;
+  }
+
+  .controls button {
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 3px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .controls button.active {
+    background: var(--accent);
+    color: #f5f0e8;
+    border-color: var(--accent);
+  }
+
+  section {
+    margin: 18px 16px 0;
+  }
+
+  section h2 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 4px;
+    border-bottom: 1px solid rgba(200,185,154,0.3);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .item:last-child { border-bottom: none; }
+
+  .checkbox {
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .item.checked .checkbox {
+    background: var(--check);
+    border-color: var(--check);
+  }
+
+  .checkmark { display: none; }
+  .item.checked .checkmark { display: block; }
+
+  .label {
+    font-size: 0.92rem;
+    line-height: 1.3;
+  }
+
+  .item.checked .label {
+    color: var(--done-text);
+    text-decoration: line-through;
+    text-decoration-color: var(--border);
+  }
+
+  .note {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 1px;
+  }
+
+  .item.checked .note { color: var(--done-text); }
+
+  .reset-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 24px 16px;
+    padding: 14px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>El Nihuil</h1>
+  <p>2 semanas — Checklist de viaje</p>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0 / 0 items</div>
+</header>
+
+<div class="controls">
+  <button onclick="setFilter('all')" id="f-all" class="active">Todos</button>
+  <button onclick="setFilter('pending')" id="f-pending">Pendientes</button>
+  <button onclick="setFilter('done')" id="f-done">Listos</button>
+</div>
+
+<div id="list"></div>
+<button class="reset-btn" onclick="resetAll()">&#x21BA; Reiniciar checklist</button>
+
+<script>
+var DATA = [
+  { cat: "Ropa", items: [
+    { id:"c1", label:"Underwear" },
+    { id:"c2", label:"Socks" },
+    { id:"c3", label:"Short pants" },
+    { id:"c4", label:"Pants" },
+    { id:"c5", label:"Shoes / Sneakers / Alpargatas" },
+    { id:"c6", label:"Swimming trunks" },
+    { id:"c7", label:"Dress shirts" },
+    { id:"c8", label:"Workout shirts" },
+    { id:"c9", label:"Suit jackets" },
+    { id:"c10", label:"Overcoat", note:"if needed" },
+    { id:"c11", label:"Gloves", note:"if needed" },
+    { id:"c12", label:"Loungewear / Pajamas" },
+    { id:"c13", label:"Belt(s)" },
+    { id:"c14", label:"Thermal / base layer" }
+  ]},
+  { cat: "Higiene / Personal", items: [
+    { id:"h1", label:"Toothbrush" },
+    { id:"h2", label:"Toothpaste" },
+    { id:"h3", label:"Night retention plate" },
+    { id:"h4", label:"Medicine", note:"if taking any" },
+    { id:"h5", label:"Supplements", note:"magnesio, potasio" },
+    { id:"h6", label:"Safety razor" },
+    { id:"h7", label:"Razor blades" },
+    { id:"h8", label:"Condoms", note:"if needed" },
+    { id:"h9", label:"Glasses" },
+    { id:"h10", label:"Sunglasses" },
+    { id:"h11", label:"Contact lenses" },
+    { id:"h12", label:"Contact lens fluid" },
+    { id:"h13", label:"Eye relief fluid" },
+    { id:"h14", label:"Talc powder" },
+    { id:"h15", label:"Deodorant" },
+    { id:"h16", label:"Perfume" },
+    { id:"h17", label:"Conditioner / Shampoo / Soap", note:"if needed" },
+    { id:"h18", label:"Sunscreen" },
+    { id:"h19", label:"Nail clippers" },
+    { id:"h20", label:"Hair comb / brush" },
+    { id:"h21", label:"Lip balm" },
+    { id:"h22", label:"Toilet paper" },
+    { id:"h23", label:"Laundry detergent" },
+    { id:"h24", label:"Towels", note:"if cabin stock uncertain" }
+  ]},
+  { cat: "Tech", items: [
+    { id:"t1", label:"Laptop" },
+    { id:"t2", label:"Mouse" },
+    { id:"t3", label:"Keyboard" },
+    { id:"t4", label:"External monitors + power supplies" },
+    { id:"t5", label:"Laptop stand" },
+    { id:"t6", label:"Laptop charger" },
+    { id:"t7", label:"Phone" },
+    { id:"t8", label:"USB-C charger" },
+    { id:"t9", label:"ANC headphones + case" },
+    { id:"t10", label:"HDMI Cable x2" },
+    { id:"t11", label:"USB-C to HDMI adapter" },
+    { id:"t12", label:"Earbuds + case + mini USB charger" },
+    { id:"t13", label:"Starlink + cable" },
+    { id:"t14", label:"Router + Ethernet cable", note:"if needed" },
+    { id:"t15", label:"Power strip / surge protector" },
+    { id:"t16", label:"Backup battery / power bank" }
+  ]},
+  { cat: "Comida", items: [
+    { id:"f1", label:"Comida para mi (2 semanas)" },
+    { id:"f2", label:"Comida para el perro (2 semanas)" }
+  ]},
+  { cat: "Auto", items: [
+    { id:"a1", label:"Seguro del auto" },
+    { id:"a2", label:"Licencia de conducir" },
+    { id:"a3", label:"Cedula del auto", note:"a nombre de papa" },
+    { id:"a4", label:"Herramientas", note:"alicates, multimetro, bomba electrica, etc." },
+    { id:"a5", label:"Verificar: nivel de aceite" },
+    { id:"a6", label:"Verificar: frenos, direccion y embrague hidraulico" },
+    { id:"a7", label:"Verificar: refrigerante" },
+    { id:"a8", label:"Verificar: nivel de combustible" },
+    { id:"a9", label:"Verificar: bateria asegurada" },
+    { id:"a10", label:"Verificar: presion de neumaticos" },
+    { id:"a11", label:"Rueda de auxilio", note:"confirmar inflada y accesible" },
+    { id:"a12", label:"Triangulo / kit de emergencia" },
+    { id:"a13", label:"Cables de arranque / jump starter portatil" },
+    { id:"a14", label:"Linterna en el auto" },
+    { id:"a15", label:"Botiquin de primeros auxilios" }
+  ]},
+  { cat: "Gym", items: [
+    { id:"g1", label:"Lifting belt" },
+    { id:"g2", label:"Wrist straps" },
+    { id:"g3", label:"Gymnast rings" }
+  ]},
+  { cat: "Varios", items: [
+    { id:"v1", label:"Billetera" },
+    { id:"v2", label:"Efectivo", note:"el minimercado puede no tener POS" },
+    { id:"v3", label:"Llaves de la cabana" },
+    { id:"v4", label:"Llaves de casa" },
+    { id:"v5", label:"Correa del perro" },
+    { id:"v6", label:"Repelente de insectos" },
+    { id:"v7", label:"Encendedor / fosforos" }
+  ]}
+];
+
+var state = {};
+var filter = 'all';
+
+// Persist via URL hash — works on Chrome Android with file:// URIs
+function tryLoad() {
+  try {
+    var h = window.location.hash.slice(1);
+    if (h) { h.split(',').forEach(function(id) { if (id) state[id] = true; }); }
+  } catch(e) {}
+}
+function trySave() {
+  try {
+    var checked = Object.keys(state).filter(function(k) { return state[k]; });
+    history.replaceState(null, '', '#' + checked.join(','));
+  } catch(e) {}
+}
+
+function toggle(id) {
+  state[id] = !state[id];
+  trySave();
+  var el = document.getElementById('item-' + id);
+  if (el) {
+    if (state[id]) el.classList.add('checked'); else el.classList.remove('checked');
+    if (filter !== 'all') el.style.display = 'none';
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  var total = 0, done = 0;
+  for (var i = 0; i < DATA.length; i++) {
+    for (var j = 0; j < DATA[i].items.length; j++) {
+      total++;
+      if (state[DATA[i].items[j].id]) done++;
+    }
+  }
+  var pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = done + ' / ' + total + ' items';
+}
+
+function setFilter(f) {
+  filter = f;
+  document.getElementById('f-all').className = f === 'all' ? 'active' : '';
+  document.getElementById('f-pending').className = f === 'pending' ? 'active' : '';
+  document.getElementById('f-done').className = f === 'done' ? 'active' : '';
+  render();
+}
+
+function resetAll() {
+  if (!confirm('Reiniciar todo el checklist?')) return;
+  state = {};
+  trySave();
+  render();
+}
+
+function render() {
+  var html = '';
+  for (var i = 0; i < DATA.length; i++) {
+    var sec = DATA[i];
+    var secHtml = '';
+    var visible = 0;
+    for (var j = 0; j < sec.items.length; j++) {
+      var item = sec.items[j];
+      var checked = !!state[item.id];
+      var hide = (filter === 'pending' && checked) || (filter === 'done' && !checked);
+      if (!hide) visible++;
+      secHtml += '<div id="item-' + item.id + '" class="item' + (checked ? ' checked' : '') + '"' +
+        (hide ? ' style="display:none"' : '') +
+        ' onclick="toggle(\'' + item.id + '\')">' +
+        '<div class="checkbox">' +
+        '<svg class="checkmark" width="13" height="10" viewBox="0 0 13 10" fill="none">' +
+        '<path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg></div><div>' +
+        '<div class="label">' + item.label + '</div>' +
+        (item.note ? '<div class="note">' + item.note + '</div>' : '') +
+        '</div></div>';
+    }
+    html += '<section' + (visible === 0 ? ' style="display:none"' : '') + '>' +
+      '<h2>' + sec.cat + '</h2>' + secHtml + '</section>';
+  }
+  document.getElementById('list').innerHTML = html;
+  updateProgress();
+}
+
+tryLoad();
+render();
+</script>
+</body>
+</html>
